@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World of Warcraft Realm Status by hckoalla</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>World of Warcraft Realm Status by hckoalla</h1>
+    <table id="realmTable">
+        <thead>
+            <tr>
+                <th>Realm Name</th>
+                <th>Status</th>
+                <th>Population</th>
+                <th>Type</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchRealmStatus() {
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+            const url = 'https://worldofwarcraft.blizzard.com/graphql';
+            const payload = {
+                operationName: "GetRealmStatusData",
+                variables: { input: { compoundRegionGameVersionSlug: "us" } },
+                extensions: {
+                    persistedQuery: {
+                        version: 1,
+                        sha256Hash: "b37e546366a58e211e922b8c96cd1ff74249f564a49029cc9737fef3300ff175"
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(proxyUrl + url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                
+                const data = await response.json();
+                console.log(data); // Adicionado para depuração
+                displayRealmStatus(data.data.Realms);
+
+            } catch (error) {
+                console.error('There has been a problem with your fetch operation:', error);
+            }
+        }
+
+        function displayRealmStatus(realms) {
+            if (!realms) {
+                console.error('Realms data is undefined or null');
+                return;
+            }
+
+            const tableBody = document.getElementById('realmTable').getElementsByTagName('tbody')[0];
+
+            realms.forEach(realm => {
+                const row = tableBody.insertRow();
+
+                const cellName = row.insertCell(0);
+                const cellStatus = row.insertCell(1);
+                const cellPopulation = row.insertCell(2);
+                const cellType = row.insertCell(3);
+
+                cellName.textContent = realm.name;
+                cellStatus.textContent = realm.online ? 'Online' : 'Offline';
+                cellPopulation.textContent = realm.population || 'N/A';
+                cellType.textContent = realm.type.name;
+            });
+        }
+
+        fetchRealmStatus();
+    </script>
+</body>
+</html>
